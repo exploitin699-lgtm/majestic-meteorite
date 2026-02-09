@@ -1,0 +1,37 @@
+---
+import MainLayout from "../layouts/MainLayout.astro";
+---
+
+<MainLayout title="Home">
+  <!-- HERO -->
+  <section class="hero">
+    <h1>
+      Empowering students with
+      <span style="color:#4f46e5;">quality e-learning resources</span>
+    </h1>
+
+    <p>
+      Access notes, quizzes, and curriculum materials for S1 to S6.
+    </p>
+
+    <div style="margin-top:2rem;">
+      <a href="/teacher" class="btn btn-teacher">
+        Teacher Dashboard
+      </a>
+    </div>
+  </section>
+
+  <!-- CLASSES -->
+  <section class="section">
+    <h2 style="margin-bottom:1.5rem;">Browse by Class</h2>
+
+    <div class="grid">
+      <a href="/s1" class="card"><h3>Senior One</h3></a>
+      <a href="/s2" class="card"><h3>Senior Two</h3></a>
+      <a href="/s3" class="card"><h3>Senior Three</h3></a>
+      <a href="/s4" class="card"><h3>Senior Four</h3></a>
+      <a href="/s5" class="card"><h3>Senior Five</h3></a>
+      <a href="/s6" class="card"><h3>Senior Six</h3></a>
+    </div>
+  </section>
+</MainLayout>

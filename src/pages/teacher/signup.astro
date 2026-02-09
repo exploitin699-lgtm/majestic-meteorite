@@ -1,0 +1,74 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import { supabase } from "../../lib/supabase";
+
+let error = "";
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const email = form.get("email");
+  const password = form.get("password");
+
+  const { error: signUpError } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (signUpError) {
+    error = signUpError.message;
+  } else {
+    return Astro.redirect("/teacher/upload");
+  }
+}
+---
+
+<MainLayout title="Teacher Sign Up">
+  <section class="section">
+    <h1>Create Teacher Account</h1>
+
+    {error && <p class="error">{error}</p>}
+
+    <form method="POST">
+      <input name="email" type="email" placeholder="Email" required />
+      <input name="password" type="password" placeholder="Password" required />
+
+      <label>Subjects</label>
+      <select multiple>
+        <option>Mathematics</option>
+        <option>English</option>
+        <option>Biology</option>
+        <option>Chemistry</option>
+        <option>Physics</option>
+        <option>Geography</option>
+        <option>History & Political Education</option>
+        <option>ICT</option>
+        <option>Food and Nutrition Technology</option>
+        <option>Performing Arts</option>
+        <option>Physical Education</option>
+        <option>Agriculture</option>
+        <option>Entrepreneurship</option>
+        <option>Literature in English</option>
+        <option>Kiswahili</option>
+        <option>CRE</option>
+        <option>IRE</option>
+        <option>French</option>
+        <option>German</option>
+        <option>Arabic</option>
+        <option>Chinese</option>
+        <option>Local Languages</option>
+      </select>
+
+      <label>Classes</label>
+      <select multiple>
+        <option>S1</option>
+        <option>S2</option>
+        <option>S3</option>
+        <option>S4</option>
+        <option>S5</option>
+        <option>S6</option>
+      </select>
+
+      <button class="btn btn-primary">Create Account</button>
+    </form>
+  </section>
+</MainLayout>

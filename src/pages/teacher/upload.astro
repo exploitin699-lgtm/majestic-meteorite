@@ -1,0 +1,92 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import { supabase } from "../../lib/supabase";
+
+let message = "";
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+
+  const file = form.get("file");
+  const title = form.get("title");
+  const subject = form.get("subject");
+  const classLevel = form.get("class");
+
+  if (file && file.name) {
+    const filePath = `${Date.now()}-${file.name}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("materials")
+      .upload(filePath, file);
+
+    if (!uploadError) {
+      const { data } = supabase.storage
+        .from("materials")
+        .getPublicUrl(filePath);
+
+      await supabase.from("materials").insert({
+        title,
+        subject,
+        class_level: classLevel,
+        file_url: data.publicUrl,
+      });
+
+      message = "Upload successful";
+    } else {
+      message = uploadError.message;
+    }
+  }
+}
+---
+
+<MainLayout title="Teacher Dashboard">
+  <section class="section">
+    <h1>Teacher Dashboard</h1>
+
+    {message && <p>{message}</p>}
+
+    <form method="POST" enctype="multipart/form-data">
+      <input name="title" placeholder="Material title" required />
+
+      <select name="class" required>
+        <option value="s1">Senior One</option>
+        <option value="s2">Senior Two</option>
+        <option value="s3">Senior Three</option>
+        <option value="s4">Senior Four</option>
+        <option value="s5">Senior Five</option>
+        <option value="s6">Senior Six</option>
+      </select>
+
+      <select name="subject" required>
+        <option>Mathematics</option>
+        <option>English</option>
+        <option>Biology</option>
+        <option>Chemistry</option>
+        <option>Physics</option>
+        <option>Geography</option>
+        <option>History & Political Education</option>
+        <option>ICT</option>
+        <option>Chinese</option>
+        <option>Local languages</option>
+        <option>Performing Arts</option>
+        <option>Technology and Design</option>
+        <option>Fine Art</option>
+        <option>Food and Nutrition technology</option>
+        <option>Physical Education</option>
+        <option>Literature in English</option>
+        <option>Agriculture</option>
+        <option>Entrepreneurship</option>
+        <option>Kiswahili</option>
+        <option>CRE</option>
+        <option>IRE</option>
+        <option>French</option>
+        <option>German</option>
+        <option>Arabic</option>
+      </select>
+
+      <input type="file" name="file" required />
+
+      <button class="btn btn-primary">Upload</button>
+    </form>
+  </section>
+</MainLayout>

@@ -1,0 +1,21 @@
+---
+const { message = "I watch over your learning." } = Astro.props;
+---
+
+<div class="lightning-god">
+  ⚡
+  <p>{message}</p>
+</div>
+
+<style>
+  .lightning-god {
+    font-size: 2rem;
+    text-align: center;
+    margin: 2rem 0;
+  }
+
+  .lightning-god p {
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+  }
+</style>

@@ -1,0 +1,37 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import { supabase } from "../../lib/supabase";
+
+let error = "";
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const email = form.get("email");
+  const password = form.get("password");
+
+  const { error: authError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (authError) {
+    error = authError.message;
+  } else {
+    return Astro.redirect("/teacher/upload");
+  }
+}
+---
+
+<MainLayout title="Teacher Login">
+  <section class="section">
+    <h1>Teacher Login</h1>
+
+    {error && <p class="error">{error}</p>}
+
+    <form method="POST">
+      <input name="email" type="email" placeholder="Email" required />
+      <input name="password" type="password" placeholder="Password" required />
+      <button class="btn btn-primary">Login</button>
+    </form>
+  </section>
+</MainLayout>

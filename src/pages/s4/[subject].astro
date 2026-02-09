@@ -1,0 +1,49 @@
+---
+import MainLayout from "../../layouts/MainLayout.astro";
+import { subjects } from "../../data/subjects";
+
+export function getStaticPaths() {
+  return subjects.map((s) => ({
+    params: { subject: s.toLowerCase().replace(/ /g, "-") },
+  }));
+}
+
+const { subject } = Astro.params;
+const subjectName = subject.replace(/-/g, " ");
+---
+
+<MainLayout title={subjectName}>
+  <section class="section">
+    <h2>{subjectName}</h2>
+
+    <div id="materials">Loading materials…</div>
+  </section>
+</MainLayout>
+
+<script>
+  import { supabase } from "../../lib/supabase";
+
+  const subject = "{subjectName}";
+  const container = document.getElementById("materials");
+
+  const { data, error } = await supabase
+    .from("materials")
+    .select("*")
+    .eq("subject", subject)
+    .eq("class_level", "s4");
+
+  if (error || !data || data.length === 0) {
+    container.innerHTML = "<p>No materials uploaded yet.</p>";
+  } else {
+    container.innerHTML = `
+      <ul>
+        ${data
+          .map(
+            (m) =>
+              `<li><a href="${m.file_url}" target="_blank">${m.title}</a></li>`
+          )
+          .join("")}
+      </ul>
+    `;
+  }
+</script>
