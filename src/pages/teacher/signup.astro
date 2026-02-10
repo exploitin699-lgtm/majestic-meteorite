@@ -1,74 +1,138 @@
 ---
+export const prerender = false
+
 import MainLayout from "../../layouts/MainLayout.astro";
-import { supabase } from "../../lib/supabase";
+import {supabase}from "../../lib/supabase";
 
-let error = "";
+const SUBJECTS = [
+  "Mathematics",
+  "Physics",
+  "Chemistry",
+  "Biology",
+  "Geography",
+  "History and Political Education",
+  "English",
+  "Literature in English",
+  "Kiswahili",
+  "French",
+  "German",
+  "Chinese",
+  "Arabic",
+  "ICT",
+  "CRE",
+  "Entrepreneurship",
+  "Technology and Design",
+  "Fine Art",
+  "Performing Arts",
+  "Agriculture",
+  "Food and Nutrition Technology",
+  "Physical Education",
+  "Religious Education",
+  "IRE",
+  "Local Languages"
+];
 
-if (Astro.request.method === "POST") {
-  const form = await Astro.request.formData();
-  const email = form.get("email");
-  const password = form.get("password");
-
-  const { error: signUpError } = await supabase.auth.signUp({
-    email,
-    password,
-  });
-
-  if (signUpError) {
-    error = signUpError.message;
-  } else {
-    return Astro.redirect("/teacher/upload");
-  }
-}
+const CLASSES = ["S1","S2","S3","S4","S5","S6"];
 ---
 
-<MainLayout title="Teacher Sign Up">
-  <section class="section">
-    <h1>Create Teacher Account</h1>
+<MainLayout title="Teacher Signup">
 
-    {error && <p class="error">{error}</p>}
+<section class="section">
 
-    <form method="POST">
-      <input name="email" type="email" placeholder="Email" required />
-      <input name="password" type="password" placeholder="Password" required />
+<h1>👩🏽‍🏫 Teacher registration</h1>
 
-      <label>Subjects</label>
-      <select multiple>
-        <option>Mathematics</option>
-        <option>English</option>
-        <option>Biology</option>
-        <option>Chemistry</option>
-        <option>Physics</option>
-        <option>Geography</option>
-        <option>History & Political Education</option>
-        <option>ICT</option>
-        <option>Food and Nutrition Technology</option>
-        <option>Performing Arts</option>
-        <option>Physical Education</option>
-        <option>Agriculture</option>
-        <option>Entrepreneurship</option>
-        <option>Literature in English</option>
-        <option>Kiswahili</option>
-        <option>CRE</option>
-        <option>IRE</option>
-        <option>French</option>
-        <option>German</option>
-        <option>Arabic</option>
-        <option>Chinese</option>
-        <option>Local Languages</option>
-      </select>
+<form id="teacherForm" class="card form">
 
-      <label>Classes</label>
-      <select multiple>
-        <option>S1</option>
-        <option>S2</option>
-        <option>S3</option>
-        <option>S4</option>
-        <option>S5</option>
-        <option>S6</option>
-      </select>
+<label>
+Full name
+<input type="text" name="full_name" required />
+</label>
 
-      <button class="btn btn-primary">Create Account</button>
-    </form>
-  </section>
+<label>
+Email
+<input type="email" name="email" required />
+</label>
+
+<label>
+Password
+<input type="password" name="password" required />
+</label>
+
+<h3>Subjects you teach</h3>
+<div class="grid small">
+  {SUBJECTS.map(s => (
+    <label class="check">
+      <input type="checkbox" name="subjects" value={s} />
+      {s}
+    </label>
+  ))}
+</div>
+
+<h3>Classes you teach</h3>
+<div class="grid small">
+  {CLASSES.map(c => (
+    <label class="check">
+      <input type="checkbox" name="class_levels" value={c} />
+      {c}
+    </label>
+  ))}
+</div>
+
+<p id="formMsg" style="color:red;"></p>
+
+<button type="submit" class="primary">
+Create account
+</button>
+
+</form>
+
+</section>
+
+<script>
+const form = document.getElementById("teacherForm");
+const msg  = document.getElementById("formMsg");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const fd = new FormData(form);
+
+  const full_name = fd.get("full_name");
+  const email = fd.get("email");
+  const password = fd.get("password");
+  const subjects = fd.getAll("subjects");
+  const class_levels = fd.getAll("class_levels");
+
+  msg.textContent = "Creating account...";
+
+  try {
+
+    const res = await fetch("/api/teacher-signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name,
+        email,
+        password,
+        subjects,
+        class_levels
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      msg.textContent = data.error || "Signup failed";
+      return;
+    }
+
+    // success
+    window.location.href = "/teacher/dashboard";
+
+  } catch (err) {
+    msg.textContent = "Network error. Try again.";
+  }
+});
+</script>
+
 </MainLayout>
