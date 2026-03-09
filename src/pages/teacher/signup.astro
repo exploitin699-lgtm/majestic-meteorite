@@ -89,17 +89,18 @@ Create account
 </section>
 
 <script>
-const form = document.getElementById("teacherForm");
-const msg  = document.getElementById("formMsg");
+const form = document.querySelector("form");
+const msg = document.getElementById("formMsg");
 
 form.addEventListener("submit", async (e) => {
+
   e.preventDefault();
 
   const fd = new FormData(form);
 
-  const full_name = fd.get("full_name");
   const email = fd.get("email");
   const password = fd.get("password");
+  const full_name = fd.get("full_name");
   const subjects = fd.getAll("subjects");
   const class_levels = fd.getAll("class_levels");
 
@@ -107,33 +108,35 @@ form.addEventListener("submit", async (e) => {
 
   try {
 
-  const res = await fetch("/api/teacher-signup", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      email,
-      password,
-      full_name,
-      subjects,
-      class_levels
-    })
-  });
+    const res = await fetch("/api/teacher-signup", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        full_name,
+        subjects,
+        class_levels
+      })
+    });
 
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!res.ok) {
-    msg.textContent = data.error || "Signup failed";
-    return;
+    if (!res.ok) {
+      msg.textContent = data.error || "Signup failed";
+      return;
+    }
+
+    window.location.href = "/teacher/dashboard";
+
+  } catch (err) {
+
+    msg.textContent = "Network error. Try again.";
+
   }
 
-  // success
-  window.location.href = "/teacher/dashboard";
-
-} catch (err) {
-  msg.textContent = "Network error. Try again.";
-}s
 });
 </script>
 
