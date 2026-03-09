@@ -1,15 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 
 export async function onRequestPost(context) {
-
-  const supabase = createClient(
-    context.env.PUBLIC_SUPABASE_URL,
-    context.env.SUPABASE_ANON_KEY
-  );
-
   try {
+    const { request, env } = context;
 
-    const body = await context.request.json();
+    const body = await request.json();
 
     const {
       email,
@@ -26,24 +21,39 @@ export async function onRequestPost(context) {
       );
     }
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password
-    });
+    const supabase = createClient(
+      env.PUBLIC_SUPABASE_URL,
+      env.SUPABASE_ANON_KEY
+    );
 
-    if (error) {
+    // create auth user
+    const { data: authData, error: authError } =
+      await supabase.auth.signUp({
+        email,
+        password
+      });
+
+    if (authError) {
       return new Response(
-        JSON.stringify({ error: error.message }),
+        JSON.stringify({ error: authError.message }),
         { status: 400 }
       );
     }
 
-    const user = data.user;
+    const user = authData.user;
 
+    if (!user) {
+      return new Response(
+        JSON.stringify({ error: "User not created" }),
+        { status: 400 }
+      );
+    }
+
+    // insert teacher profile
     const { error: insertError } = await supabase
       .from("teachers")
       .insert({
-        user_id: user.id,
+        id: user.id,
         email,
         full_name,
         subjects,
@@ -63,9 +73,8 @@ export async function onRequestPost(context) {
     );
 
   } catch (e) {
-
     return new Response(
-      JSON.stringify({ error: "Server error" }),
+      JSON.stringify({ error: e.message }),
       { status: 500 }
     );
   }

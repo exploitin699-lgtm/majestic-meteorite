@@ -107,31 +107,33 @@ form.addEventListener("submit", async (e) => {
 
   try {
 
-    const res = await fetch("/api/teacher-signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        full_name,
-        email,
-        password,
-        subjects,
-        class_levels
-      })
-    });
+  const res = await fetch("/api/teacher-signup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email,
+      password,
+      full_name,
+      subjects,
+      class_levels
+    })
+  });
 
-    const data = await res.json();
+  const data = await res.json();
 
-    if (!res.ok) {
-      msg.textContent = data.error || "Signup failed";
-      return;
-    }
-
-    // success
-    window.location.href = "/teacher/dashboard";
-
-  } catch (err) {
-    msg.textContent = "Network error. Try again.";
+  if (!res.ok) {
+    msg.textContent = data.error || "Signup failed";
+    return;
   }
+
+  // success
+  window.location.href = "/teacher/dashboard";
+
+} catch (err) {
+  msg.textContent = "Network error. Try again.";
+}s
 });
 </script>
 
