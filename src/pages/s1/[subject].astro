@@ -30,7 +30,7 @@ const subjectName = subject.replace(/-/g, " ");
     .from("materials")
     .select("*")
     .eq("subject", subject)
-    .eq("class_level", "s2");
+    .eq("class_level", "s1");
 
   if (error || !data || data.length === 0) {
     container.innerHTML = "<p>No materials uploaded yet.</p>";
