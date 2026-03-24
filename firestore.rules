@@ -1,0 +1,10 @@
+// filepath: c:\Users\USER\majestic-meteorite\firestore.rules
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Unrestricted rules for demonstration (allow all reads/writes)
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

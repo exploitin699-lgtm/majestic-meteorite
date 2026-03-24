@@ -1,6 +1,4 @@
 ---
-export const prerender = false
-
 import MainLayout from "../../layouts/MainLayout.astro";
 
 
@@ -88,55 +86,78 @@ Create account
 
 </section>
 
-<script>
-const form = document.querySelector("form");
+<script type="module">
+const form = document.querySelector("#teacherForm");
 const msg = document.getElementById("formMsg");
 
-form.addEventListener("submit", async (e) => {
+// Detect if running in local development
+const isLocalDev = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
 
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
+  msg.textContent = "";
 
   const fd = new FormData(form);
-
-  const email = fd.get("email");
-  const password = fd.get("password");
-  const full_name = fd.get("full_name");
   const subjects = fd.getAll("subjects");
   const class_levels = fd.getAll("class_levels");
 
+  if (subjects.length === 0 || class_levels.length === 0) {
+    msg.textContent = "Please select at least one subject and class level";
+    msg.style.color = "red";
+    return;
+  }
+
+  const data = {
+    email: fd.get("email"),
+    password: fd.get("password"),
+    full_name: fd.get("full_name"),
+    subjects,
+    class_levels,
+  };
+
   msg.textContent = "Creating account...";
+  msg.style.color = "blue";
 
   try {
-
-    const res = await fetch("/api/teacher-signup", {
+    // In local development, Firebase functions emulator runs on a different port
+    // Use the standard /api/teacher-signup which works via firebase emulator and Firebase Hosting
+    const response = await fetch("/api/teacher-signup", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        email,
-        password,
-        full_name,
-        subjects,
-        class_levels
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
     });
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      msg.textContent = data.error || "Signup failed";
+    let result;
+    try {
+      result = await response.json();
+    } catch (e) {
+      console.error("Failed to parse response:", e);
+      
+      if (isLocalDev && response.status === 404) {
+        msg.textContent = "❌ Local Development: Please run Firebase emulator. See SETUP_LOCAL_DEV.md";
+        msg.style.color = "orange";
+      } else {
+        msg.textContent = `Server error (${response.status}). Please try again later.`;
+        msg.style.color = "red";
+      }
       return;
     }
 
-    window.location.href = "/teacher/dashboard";
-
-  } catch (err) {
-
-    msg.textContent = "Network error. Try again.";
-
+    if (response.ok) {
+      msg.textContent = "✓ Account created! Redirecting...";
+      msg.style.color = "green";
+      setTimeout(() => {
+        window.location.href = "/teacher/login";
+      }, 1500);
+    } else {
+      msg.textContent = result.error || `Signup failed (${response.status}). Please try again.`;
+      msg.style.color = "red";
+    }
+  } catch (error) {
+    console.error("Network error:", error);
+    msg.textContent = "Network error: " + error.message;
+    msg.style.color = "red";
   }
-
 });
 </script>
 

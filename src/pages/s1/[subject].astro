@@ -16,6 +16,15 @@ const subjectName = subject.replace(/-/g, " ");
   <section class="section">
     <h2>{subjectName}</h2>
 
+    {subjectName.toLowerCase() === "geography" && (
+      <div class="materials-highlight">
+        <h3>Key Resources</h3>
+        <ul>
+          <li><a href="/GEOGRAPHY_OF_EAST_AFRICA_NOTES.pdf" target="_blank" download>📄 Geography of East Africa Notes (PDF)</a></li>
+        </ul>
+      </div>
+    )}
+
     <div id="materials">Loading materials…</div>
   </section>
 </MainLayout>
@@ -33,7 +42,7 @@ const subjectName = subject.replace(/-/g, " ");
     .eq("class_level", "s1");
 
   if (error || !data || data.length === 0) {
-    container.innerHTML = "<p>No materials uploaded yet.</p>";
+    container.innerHTML = "<p>What is science.</p>";
   } else {
     container.innerHTML = `
       <ul>
