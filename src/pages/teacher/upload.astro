@@ -1,41 +1,13 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
-import { supabase } from "../../lib/supabase";
+import { auth, storage, db } from "../../lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc } from 'firebase/firestore';
 
 let message = "";
 
 if (Astro.request.method === "POST") {
-  const form = await Astro.request.formData();
-
-  const file = form.get("file");
-  const title = form.get("title");
-  const subject = form.get("subject");
-  const classLevel = form.get("class");
-
-  if (file && file.name) {
-    const filePath = `${Date.now()}-${file.name}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("materials")
-      .upload(filePath, file);
-
-    if (!uploadError) {
-      const { data } = supabase.storage
-        .from("materials")
-        .getPublicUrl(filePath);
-
-      await supabase.from("materials").insert({
-        title,
-        subject,
-        class_level: classLevel,
-        file_url: data.publicUrl,
-      });
-
-      message = "Upload successful";
-    } else {
-      message = uploadError.message;
-    }
-  }
+  // Since Firebase client auth is needed, handle on client-side
 }
 ---
 
@@ -43,9 +15,9 @@ if (Astro.request.method === "POST") {
   <section class="section">
     <h1>Teacher Dashboard</h1>
 
-    {message && <p>{message}</p>}
+    <p id="message"></p>
 
-    <form method="POST" enctype="multipart/form-data">
+    <form id="uploadForm" enctype="multipart/form-data">
       <input name="title" placeholder="Material title" required />
 
       <select name="class" required>
@@ -86,7 +58,61 @@ if (Astro.request.method === "POST") {
 
       <input type="file" name="file" required />
 
-      <button class="btn btn-primary">Upload</button>
+      <button class="btn btn-primary" type="submit">Upload</button>
     </form>
   </section>
 </MainLayout>
+
+<script>
+  import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+  import { collection, addDoc } from 'firebase/firestore';
+  import { storage, db, auth } from '../../lib/firebase';
+  import { onAuthStateChanged } from 'firebase/auth';
+
+  const form = document.getElementById('uploadForm');
+  const messageEl = document.getElementById('message');
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      window.location.href = '/teacher/login';
+    }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    messageEl.textContent = 'Uploading...';
+    messageEl.style.color = 'blue';
+
+    const formData = new FormData(form);
+    const file = formData.get('file');
+    const title = formData.get('title');
+    const subject = formData.get('subject');
+    const classLevel = formData.get('class');
+
+    if (file && file.name) {
+      const filePath = `materials/${Date.now()}-${file.name}`;
+      const storageRef = ref(storage, filePath);
+
+      try {
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        await addDoc(collection(db, 'materials'), {
+          title,
+          subject,
+          class_level: classLevel,
+          file_url: downloadURL,
+          uploaded_by: auth.currentUser.uid,
+          uploaded_at: new Date(),
+        });
+
+        messageEl.textContent = 'Upload successful';
+        messageEl.style.color = 'green';
+        form.reset();
+      } catch (error) {
+        messageEl.textContent = error.message;
+        messageEl.style.color = 'red';
+      }
+    }
+  });
+</script>

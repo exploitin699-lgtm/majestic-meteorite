@@ -1,6 +1,6 @@
 ---
 import MainLayout from "../../layouts/MainLayout.astro";
-import { supabase } from "../../lib/supabase";
+import { auth } from "../../lib/firebase";
 
 let error = "";
 
@@ -9,16 +9,13 @@ if (Astro.request.method === "POST") {
   const email = form.get("email");
   const password = form.get("password");
 
-  const { error: authError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+  // Note: Since this is server-side, we can't directly use Firebase client auth here.
+  // For server-side auth, we might need to use Firebase Admin or redirect to client-side handling.
+  // For now, we'll handle it client-side in the script.
+  // But since Astro server-side doesn't support Firebase client auth directly,
+  // we need to adjust. Perhaps make it client-side only.
 
-  if (authError) {
-    error = authError.message;
-  } else {
-    return Astro.redirect("/teacher/upload");
-  }
+  // Actually, for simplicity, let's move the auth to client-side script.
 }
 ---
 
@@ -26,12 +23,36 @@ if (Astro.request.method === "POST") {
   <section class="section">
     <h1>Teacher Login</h1>
 
-    {error && <p class="error">{error}</p>}
+    <p id="error" class="error"></p>
 
-    <form method="POST">
+    <form id="loginForm">
       <input name="email" type="email" placeholder="Email" required />
       <input name="password" type="password" placeholder="Password" required />
-      <button class="btn btn-primary">Login</button>
+      <button class="btn btn-primary" type="submit">Login</button>
     </form>
   </section>
 </MainLayout>
+
+<script>
+  import { signInWithEmailAndPassword } from 'firebase/auth';
+  import { auth } from '../../lib/firebase';
+
+  const form = document.getElementById('loginForm');
+  const errorEl = document.getElementById('error');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    const formData = new FormData(form);
+    const email = formData.get('email');
+    const password = formData.get('password');
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.href = '/teacher/upload';
+    } catch (error) {
+      errorEl.textContent = error.message;
+    }
+  });
+</script>

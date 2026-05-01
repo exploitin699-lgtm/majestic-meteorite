@@ -30,28 +30,24 @@ const subjectName = subject.replace(/-/g, " ");
 </MainLayout>
 
 <script>
-  import { supabase } from "../../lib/supabase";
+  import { collection, query, where, getDocs } from 'firebase/firestore';
+  import { db } from "../../lib/firebase";
 
   const subject = "{subjectName}";
   const container = document.getElementById("materials");
 
-  const { data, error } = await supabase
-    .from("materials")
-    .select("*")
-    .eq("subject", subject)
-    .eq("class_level", "s1");
+  const q = query(collection(db, 'materials'), where('subject', '==', subject), where('class_level', '==', 's1'));
+  const querySnapshot = await getDocs(q);
 
-  if (error || !data || data.length === 0) {
+  if (querySnapshot.empty) {
     container.innerHTML = "<p>What is science.</p>";
   } else {
     container.innerHTML = `
       <ul>
-        ${data
-          .map(
-            (m) =>
-              `<li><a href="${m.file_url}" target="_blank">${m.title}</a></li>`
-          )
-          .join("")}
+        ${querySnapshot.docs.map(doc => {
+          const m = doc.data();
+          return `<li><a href="${m.file_url}" target="_blank">${m.title}</a></li>`;
+        }).join("")}
       </ul>
     `;
   }
